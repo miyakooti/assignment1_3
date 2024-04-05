@@ -16,11 +16,11 @@ def create_dax_table(dyn_resource=None):
         "TableName": table_name,
         "KeySchema": [
             {"AttributeName": "email", "KeyType": "HASH"},
-            {"AttributeName": "password", "KeyType": "RANGE"},
+            # {"AttributeName": "password", "KeyType": "RANGE"},
         ],
         "AttributeDefinitions": [
             {"AttributeName": "email", "AttributeType": "S"},
-            {"AttributeName": "password", "AttributeType": "S"},
+            # {"AttributeName": "password", "AttributeType": "S"},
         ],
         "ProvisionedThroughput": {"ReadCapacityUnits": 10, "WriteCapacityUnits": 10},
     }

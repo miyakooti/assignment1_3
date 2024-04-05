@@ -5,6 +5,7 @@ from wtforms.validators import DataRequired
 import boto3
 import os
 import logging
+import json
 
 from aws_credentials import get_session
 
@@ -37,7 +38,6 @@ def login():
     print(response)
 
 
-
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
@@ -49,13 +49,15 @@ def login():
             TableName="login",
             Key={
                 "email": {"S": email},
-                "password": {"S": password},
             },
         )
+
+        print(response["Item"]["password"])
 
         if response != None:
             print("login success")
             # return redirect(url_for('success'))
+            # たぶんメインページに飛ぶ
 
 
         
@@ -64,6 +66,46 @@ def login():
     
     # GETリクエストの場合はログインページを表示
     return render_template('login.html', message='')
+
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+
+        email = request.form['email']
+        user_name = request.form['user_name']
+        password = request.form['password']
+
+        response = dynamodb_client.get_item(
+            TableName="login",
+            Key={
+                "email": {"S": email},
+            },
+        )
+
+
+        print(response.get("ResponseMetadata"))
+        print(response.get("Item"))
+
+
+        if response.get("Item") != None:
+            print(response)
+            print("the email is already used")
+            return render_template('register.html', message='The email already exists')
+
+        else:
+            response = dynamodb_client.put_item(
+                TableName="login",
+                Item={
+                    'email': {'S': email},
+                    'user_name': {'S': user_name},
+                    'password': {'S': password}
+                }
+            )
+            return redirect(url_for("login"))
+
+    return render_template('register.html', message='')
 
 @app.route('/home')
 def home():
