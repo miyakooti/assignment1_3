@@ -48,7 +48,7 @@ def login():
         response = dynamodb_client.get_item(
             TableName="login",
             Key={
-                "user_name": {"S": email},
+                "email": {"S": email},
                 "password": {"S": password},
             },
         )
@@ -60,7 +60,7 @@ def login():
 
         
         # ログイン失敗時にログインページを再表示
-        return render_template('login.html', message='Invalid email or password')
+        return render_template('login.html', message='email or password is invalid')
     
     # GETリクエストの場合はログインページを表示
     return render_template('login.html', message='')
