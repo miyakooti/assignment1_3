@@ -36,31 +36,28 @@ def login():
     response = dynamodb_client.list_tables()
     print(response)
 
-    response = dynamodb_client.get_item(
-        TableName="login",
-        Key={
-            "email": {"S": "S40756889@student.rmit.edu.au"},
-            "user_name": {"S": "kosuke arai 9"},
-        },
-    )
+
 
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
 
+        print(email)
+        print(password)
 
-        # DynamoDBからユーザー情報を取得
-        response = login_table.get_item(
+        response = dynamodb_client.get_item(
+            TableName="login",
             Key={
-                'email': email
-            }
+                "user_name": {"S": email},
+                "password": {"S": password},
+            },
         )
-        
-        # ユーザーが存在し、パスワードが一致する場合にログイン成功とする
-        if 'Item' in response:
-            stored_password = response['Item']['password']
-            if password == stored_password:
-                return redirect(url_for('success'))
+
+        if response != None:
+            print("login success")
+            # return redirect(url_for('success'))
+
+
         
         # ログイン失敗時にログインページを再表示
         return render_template('login.html', message='Invalid email or password')
