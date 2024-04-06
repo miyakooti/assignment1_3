@@ -1,0 +1,27 @@
+/* styles.css */
+
+/* リストのスタイルを指定 */
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+/* 各リストアイテムのスタイルを指定 */
+li {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box; /* paddingやborderを含めた要素のサイズを指定 */
+}
+/* 画像のスタイルを指定 */
+img {
+    max-width: 100%; /* 画像が親要素の幅を超えないようにする */
+    height: auto;
+    display: block; /* 画像をブロック要素として扱う */
+    margin-bottom: 10px;
+}
+
+.favorite_list {
+    width: 50%;
+    background-color: skyblue
+}

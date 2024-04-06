@@ -52,12 +52,12 @@ def login():
             },
         )
 
-        print(response["Item"]["password"])
+        print(response)
+
 
         if response != None:
             print("login success")
-            # return redirect(url_for('success'))
-            # たぶんメインページに飛ぶ
+            return redirect(url_for("home"))
 
 
         
@@ -107,9 +107,63 @@ def register():
 
     return render_template('register.html', message='')
 
-@app.route('/home')
+@app.route('/home', methods=['GET', 'POST'])
 def home():
-    return render_template('home.html')
+    if request.method == 'POST':
+        # 絞り込み検索する
+        print("postされました")
+
+        title = request.form['title']
+        year = request.form['year']
+        artist = request.form['artist']
+
+        # if type(year) != int:
+        #     # 整数を入力してちょうだいな
+        #     response = dynamodb_client.scan(
+        #     TableName="music"
+        #     )
+        #     items = response.get('Items', [])
+
+        #     return render_template('home.html', items=items)
+
+
+        print(artist)
+
+        # 検索
+        print("検索を開始します")
+        response = dynamodb_client.scan(
+            TableName='music',
+            FilterExpression='#title = :title and #year = :year and #artist = :artist',
+            ExpressionAttributeNames={
+                '#title': 'title',
+                '#year': 'year',
+                '#artist': 'artist'
+            },
+            ExpressionAttributeValues={
+                ':title': {'S': title},
+                ':year': {'N': year},
+                ':artist': {'S': artist}
+            }
+        )
+
+        # 検索結果を取得
+        items = response.get('Items', [])
+
+        # HTMLテンプレートに結果を渡して表示
+        return render_template('home.html', items=items)
+
+    else:
+    
+        # テーブルから全てのアイテムをスキャン
+        response = dynamodb_client.scan(
+            TableName="music"
+        )
+
+        # スキャン結果からアイテムを取得
+        items = response.get('Items', [])
+
+
+        return render_template('home.html', items=items)
 
 @app.route('/') 
 def hello_world():
