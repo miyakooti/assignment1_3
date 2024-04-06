@@ -230,7 +230,43 @@ def add_to_favorites():
 
     return redirect(url_for("home"))
 
-    
+@app.route('/delete_from_favorites', methods=['POST'])
+def delete_from_favorites():
+
+    email = "niimaru09@gmail.com"  # ユーザーIDを適切な方法で取得する
+    song_title = request.form.get('song_title')
+
+    print(song_title + "has been pushed")
+
+        # loginテーブルからユーザーのお気に入りリストを取得
+    response = dynamodb_client.get_item(
+        TableName='login',
+        Key={
+            'email': {'S': email}
+        }
+    )
+
+    # お気に入りリストをget
+    favorite_list = list(response.get('Item', {}).get('favorite_list', {'SS': []})['SS'])
+    favorite_list.remove(song_title)
+
+
+    print(favorite_list)
+
+    # 更新されたお気に入りリストをDynamoDBに保存
+    dynamodb_client.update_item(
+        TableName='login',
+        Key={
+            'email': {'S': email}
+        },
+        UpdateExpression='SET favorite_list = :fl',
+        ExpressionAttributeValues={
+            ':fl': {'SS': favorite_list}
+        }
+    )
+
+    return redirect(url_for("home"))
+
 
 
 

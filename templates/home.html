@@ -65,19 +65,20 @@
                 <input type="text" id="artist" name="artist"><br><br>
                 <button type="submit", class="del">Search</button>
             </form>
-            <ul>
-                {% for item in favorite_items %}
-                    <li>
-                        <strong>Title:</strong> {{ item.title.S }}<br>
-                        <strong>Artist:</strong> {{ item.artist.S }}<br>
-                        <strong>Year:</strong> {{ item.year.N }}<br>
-                        <!-- <strong>Web URL:</strong> <a href="{{ item.web_url.S }}">{{ item.web_url.S }}</a><br>
-                        <strong>Image URL:</strong> <img src="{{ item.image_url.S }}" alt="Artist Image"><br> -->
-                        <button type="button" class="btn">Sucsbribe</button>
-
-                    </li>
-                {% endfor %}
-            </ul>
+            <form action="/delete_from_favorites" method="POST">
+                <ul>
+                    {% for item in favorite_items %}
+                        <li>
+                            <strong>Title:</strong> {{ item.title.S }}<br>
+                            <strong>Artist:</strong> {{ item.artist.S }}<br>
+                            <strong>Year:</strong> {{ item.year.N }}<br>
+                            <!-- <strong>Web URL:</strong> <a href="{{ item.web_url.S }}">{{ item.web_url.S }}</a><br>
+                            <strong>Image URL:</strong> <img src="{{ item.image_url.S }}" alt="Artist Image"><br> -->
+                            <button type="submit" name="song_title" value="{{ item.title.S }}" class="btn">Delete</button>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </form>
         </div>
 
         <div class="favorite_list">
