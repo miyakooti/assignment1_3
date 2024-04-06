@@ -109,6 +109,8 @@ def register():
 
 @app.route('/home', methods=['GET', 'POST'])
 def home():
+
+    searched_items = []
     if request.method == 'POST':
         # 絞り込み検索する
         print("postされました")
@@ -129,6 +131,9 @@ def home():
 
         print(artist)
 
+
+
+
         # 検索
         print("検索を開始します")
         response = dynamodb_client.scan(
@@ -147,23 +152,88 @@ def home():
         )
 
         # 検索結果を取得
-        items = response.get('Items', [])
+        searched_items = response.get('Items', [])
 
         # HTMLテンプレートに結果を渡して表示
-        return render_template('home.html', items=items)
 
-    else:
-    
-        # テーブルから全てのアイテムをスキャン
-        response = dynamodb_client.scan(
-            TableName="music"
+
+
+
+    # fix here. we can erase here when i brought user info.
+    response = dynamodb_client.get_item(
+    TableName='login',
+    Key={'email': {'S': "niimaru09@gmail.com"}},
+    ProjectionExpression='favorite_list'
+    )
+    favorite_list = response['Item'].get('favorite_list', {'SS': []})['SS']
+
+    # favorite items
+    favorite_items = []
+    for song_title in favorite_list:
+        response = dynamodb_client.query(
+            TableName='music',
+            KeyConditionExpression='#title = :title',
+            ExpressionAttributeNames={'#title': 'title'},
+            ExpressionAttributeValues={':title': {'S': song_title}}
         )
+        favorite_items.extend(response.get('Items', []))
 
-        # スキャン結果からアイテムを取得
-        items = response.get('Items', [])
+    # テーブルから全てのアイテムをスキャン
+    response = dynamodb_client.scan(
+        TableName="music"
+    )
 
 
-        return render_template('home.html', items=items)
+
+    # スキャン結果からアイテムを取得
+    items = response.get('Items', [])
+
+
+    return render_template('home.html', favorite_items=favorite_items, searched_items=searched_items)
+
+
+@app.route('/add_to_favorites', methods=['POST'])
+def add_to_favorites():
+
+    email = "niimaru09@gmail.com"  # ユーザーIDを適切な方法で取得する
+    song_title = request.form.get('song_title')
+
+    print(song_title + "has been pushed")
+
+        # loginテーブルからユーザーのお気に入りリストを取得
+    response = dynamodb_client.get_item(
+        TableName='login',
+        Key={
+            'email': {'S': email}
+        }
+    )
+
+    # お気に入りリストを取得し、楽曲名を追加
+    favorite_list = list(response.get('Item', {}).get('favorite_list', {'SS': []})['SS'])
+    if song_title not in favorite_list:
+        favorite_list.append(song_title)
+    print("favorite_list")
+
+    print(favorite_list)
+
+    # 更新されたお気に入りリストをDynamoDBに保存
+    dynamodb_client.update_item(
+        TableName='login',
+        Key={
+            'email': {'S': email}
+        },
+        UpdateExpression='SET favorite_list = :fl',
+        ExpressionAttributeValues={
+            ':fl': {'SS': favorite_list}
+        }
+    )
+
+    return redirect(url_for("home"))
+
+    
+
+
+
 
 @app.route('/') 
 def hello_world():
