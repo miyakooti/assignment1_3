@@ -1,4 +1,11 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
+from flask_login import login_user, logout_user, login_required
+from flask_login import LoginManager
+from flask_login import current_user
+
+
+
+
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
@@ -13,7 +20,17 @@ from aws_credentials import get_session
 
 app = Flask(__name__)
 
+
+
 app.config['SECRET_KEY'] = os.urandom(24)
+
+login_manager = LoginManager(app)
+login_manager.init_app(app)
+
+# wanna manage as like singleton tho
+session_user_name = ""
+session_email = ""
+
 
 # AWS認証情報の設定
 session = get_session()
@@ -29,7 +46,9 @@ class LoginForm(FlaskForm):
     password = PasswordField('password', validators=[DataRequired()])
     submit = SubmitField('Login')
 
-
+@login_manager.user_loader
+def load_user(user_id):
+    return User(user_id)
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -52,11 +71,17 @@ def login():
             },
         )
 
-        print(response)
+        user_name = response.get('Item', {}).get('user_name', {}).get('S')
+
+
 
 
         if response != None:
             print("login success")
+            user = User(email)
+            login_user(user)
+            session_email = email
+            session_user_name = user_name
             return redirect(url_for("home"))
 
 
@@ -103,12 +128,38 @@ def register():
                     'password': {'S': password}
                 }
             )
+            # login judgement is here
+            user = User(email)
+            login_user(user)
+
+
             return redirect(url_for("login"))
 
     return render_template('register.html', message='')
 
 @app.route('/home', methods=['GET', 'POST'])
+@login_required
 def home():
+
+    # not good cus we have to scan every time it reloads
+    print(current_user.id)
+    email = current_user.id
+
+    response = dynamodb_client.scan(
+    TableName='login',
+    FilterExpression='#email = :email',
+    ExpressionAttributeNames={
+        '#email': 'email'
+    },
+    ExpressionAttributeValues={
+        ':email': {'S': email}
+    }
+    )
+
+    item = response.get('Items', [])[0]
+    user_name = item.get('user_name', {}).get('S')
+
+
 
     searched_items = []
     if request.method == 'POST':
@@ -189,10 +240,11 @@ def home():
     items = response.get('Items', [])
 
 
-    return render_template('home.html', favorite_items=favorite_items, searched_items=searched_items)
+    return render_template('home.html', favorite_items=favorite_items, searched_items=searched_items, user_name=user_name)
 
 
 @app.route('/add_to_favorites', methods=['POST'])
+@login_required
 def add_to_favorites():
 
     email = "niimaru09@gmail.com"  # ユーザーIDを適切な方法で取得する
@@ -231,6 +283,7 @@ def add_to_favorites():
     return redirect(url_for("home"))
 
 @app.route('/delete_from_favorites', methods=['POST'])
+@login_required
 def delete_from_favorites():
 
     email = "niimaru09@gmail.com"  # ユーザーIDを適切な方法で取得する
@@ -268,7 +321,26 @@ def delete_from_favorites():
     return redirect(url_for("home"))
 
 
+from flask_login import UserMixin
 
+class User(UserMixin):
+    def __init__(self, user_id):
+        self.id = user_id
+
+    # def setUserInfo(self, email, user_name):
+    #     self.email = email
+    #     self.user_name = user_name
+
+    
+        
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    session_user_name = ""
+    session_email = ""
+    return redirect(url_for("login"))
 
 
 @app.route('/') 
