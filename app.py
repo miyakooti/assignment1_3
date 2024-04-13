@@ -212,7 +212,6 @@ def add_to_favorites():
 
     print(song_title + "has been pushed")
 
-    # loginテーブルからユーザーのお気に入りリストを取得
     response = dynamodb_client.get_item(
         TableName='login',
         Key={
@@ -220,7 +219,6 @@ def add_to_favorites():
         }
     )
 
-    # お気に入りリストを取得し、楽曲名を追加
     favorite_list = list(response.get('Item', {}).get('favorite_list', {'SS': []})['SS'])
     if song_title not in favorite_list:
         favorite_list.append(song_title)
@@ -228,7 +226,6 @@ def add_to_favorites():
 
     print(favorite_list)
 
-    # 更新されたお気に入りリストをDynamoDBに保存
     dynamodb_client.update_item(
         TableName='login',
         Key={
