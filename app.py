@@ -3,9 +3,6 @@ from flask_login import login_user, logout_user, login_required
 from flask_login import LoginManager
 from flask_login import current_user
 
-
-
-
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
@@ -15,22 +12,14 @@ import logging
 import json
 
 from aws_credentials import get_session
-
-
+from flask_login import UserMixin
 
 app = Flask(__name__)
-
-
 
 app.config['SECRET_KEY'] = os.urandom(24)
 
 login_manager = LoginManager(app)
 login_manager.init_app(app)
-
-# wanna manage as like singleton tho
-session_user_name = ""
-session_email = ""
-
 
 # AWS認証情報の設定
 session = get_session()
@@ -39,30 +28,14 @@ session = get_session()
 s3_client = session.client('s3')
 dynamodb_client = session.client("dynamodb")
 
-
-
-class LoginForm(FlaskForm):
-    email = StringField('email', validators=[DataRequired()])
-    password = PasswordField('password', validators=[DataRequired()])
-    submit = SubmitField('Login')
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User(user_id)
-
 @app.route('/', methods=['GET', 'POST'])
 def login():
 
     response = dynamodb_client.list_tables()
-    print(response)
-
 
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-
-        print(email)
-        print(password)
 
         response = dynamodb_client.get_item(
             TableName="login",
@@ -72,9 +45,6 @@ def login():
         )
 
         user_name = response.get('Item', {}).get('user_name', {}).get('S')
-
-
-
 
         if response != None:
             print("login success")
@@ -245,11 +215,8 @@ def home():
         TableName="music"
     )
 
-
-
     # スキャン結果からアイテムを取得
     items = response.get('Items', [])
-
 
     return render_template('home.html', favorite_items=favorite_items, searched_items=searched_items, user_name=user_name, message=message)
 
@@ -331,20 +298,6 @@ def delete_from_favorites():
 
     return redirect(url_for("home"))
 
-
-from flask_login import UserMixin
-
-class User(UserMixin):
-    def __init__(self, user_id):
-        self.id = user_id
-
-    # def setUserInfo(self, email, user_name):
-    #     self.email = email
-    #     self.user_name = user_name
-
-    
-        
-
 @app.route("/logout")
 @login_required
 def logout():
@@ -353,12 +306,18 @@ def logout():
     session_email = ""
     return redirect(url_for("login"))
 
+class User(UserMixin):
+    def __init__(self, user_id):
+        self.id = user_id
 
-@app.route('/') 
-def hello_world():
-    return '誘導できた!' 
+class LoginForm(FlaskForm):
+    email = StringField('email', validators=[DataRequired()])
+    password = PasswordField('password', validators=[DataRequired()])
+    submit = SubmitField('Login')
 
-
+@login_manager.user_loader
+def load_user(user_id):
+    return User(user_id)
 
 if __name__ == '__main__':
     app.run()
