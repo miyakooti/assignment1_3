@@ -170,36 +170,39 @@ def home():
         year = request.form['year']
         artist = request.form['artist']
 
-        # if type(year) != int:
-        #     # 整数を入力してちょうだいな
-        #     response = dynamodb_client.scan(
-        #     TableName="music"
-        #     )
-        #     items = response.get('Items', [])
-
-        #     return render_template('home.html', items=items)
-
-
-        print(artist)
-
-
+        # クエリ内容の準備
+        # i guess we have to create corresponding class which enables us to construct query more easier.
+        filter_expression = ""
+        expression_attribute_names = {}
+        expression_attribute_values = {}
+        # タイトルが入力されている場合は条件を追加
+        if title:
+            filter_expression += "#title = :title"
+            expression_attribute_names["#title"] = "title"
+            expression_attribute_values[':title'] = {'S': title}
+        # 年が入力されている場合は条件を追加
+        if year:
+            if filter_expression:
+                filter_expression += " and "
+            expression_attribute_names["#year"] = "year"
+            filter_expression += "#year = :year"
+            expression_attribute_values[':year'] = {'N': year}
+        # アーティストが入力されている場合は条件を追加
+        if artist:
+            if filter_expression:
+                filter_expression += " and "
+            expression_attribute_names["#artist"] = "artist"
+            filter_expression += "#artist = :artist"
+            expression_attribute_values[':artist'] = {'S': artist}
 
 
         # 検索
         print("検索を開始します")
         response = dynamodb_client.scan(
             TableName='music',
-            FilterExpression='#title = :title and #year = :year and #artist = :artist',
-            ExpressionAttributeNames={
-                '#title': 'title',
-                '#year': 'year',
-                '#artist': 'artist'
-            },
-            ExpressionAttributeValues={
-                ':title': {'S': title},
-                ':year': {'N': year},
-                ':artist': {'S': artist}
-            }
+            FilterExpression=filter_expression,
+            ExpressionAttributeNames=expression_attribute_names,
+            ExpressionAttributeValues=expression_attribute_values,
         )
 
         # 検索結果を取得
