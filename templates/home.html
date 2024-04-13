@@ -12,30 +12,19 @@
     crossorigin="anonymous"
     />
 
-    <!-- 外部のCSSファイルを読み込む -->
     <link rel="stylesheet" href="home.css">
     <style>
-        /* リストのスタイルを指定 */
     ul {
         list-style-type: none;
         padding: 0;
         margin: 0;
     }
-    /* 各リストアイテムのスタイルを指定 */
     li {
         border: 1px solid #ccc;
         padding: 10px;
         margin-bottom: 10px;
-        box-sizing: border-box; /* paddingやborderを含めた要素のサイズを指定 */
+        box-sizing: border-box;
     }
-    /* 画像のスタイルを指定 */
-    img {
-        max-width: 100%; /* 画像が親要素の幅を超えないようにする */
-        height: auto;
-        display: block; /* 画像をブロック要素として扱う */
-        margin-bottom: 10px;
-    }
-
     .favorite_list {
         width: 50%;
         background-color: skyblue
@@ -54,8 +43,6 @@
     <h1>Music App</h1>
 
     <p>Hi, {{user_name}}</p>
-
-    
 
     <form action="/logout">
         <button type="submit" class="btn">logout</button>

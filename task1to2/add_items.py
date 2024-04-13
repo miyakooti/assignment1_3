@@ -1,8 +1,6 @@
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 
-
-
 def write_data_to_dax_table(dyn_resource=None):
 
     if dyn_resource is None:
