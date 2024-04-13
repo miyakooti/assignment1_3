@@ -93,6 +93,10 @@
 
         <div class="favorite_list">
             <h1>Search</h1>
+            {% if message %}
+            <h1>{{ message }}</h1>
+            {% endif %}
+
             <form method="POST">
                 <label for="title">Title:</label>
                 <input type="text" id="title" name="title"><br><br>

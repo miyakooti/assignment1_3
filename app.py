@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, session
 from flask_login import login_user, logout_user, login_required
 from flask_login import LoginManager
 from flask_login import current_user
@@ -141,6 +141,8 @@ def register():
 @login_required
 def home():
 
+    message = ""
+
     # not good cus we have to scan every time it reloads
     print(current_user.id)
     email = current_user.id
@@ -208,7 +210,13 @@ def home():
         # 検索結果を取得
         searched_items = response.get('Items', [])
 
+        print(searched_items)
+        print(type(searched_items))
+
         # HTMLテンプレートに結果を渡して表示
+
+        if searched_items == []:
+            message = "No result is retrieved. Please query again"
 
 
 
@@ -243,7 +251,7 @@ def home():
     items = response.get('Items', [])
 
 
-    return render_template('home.html', favorite_items=favorite_items, searched_items=searched_items, user_name=user_name)
+    return render_template('home.html', favorite_items=favorite_items, searched_items=searched_items, user_name=user_name, message=message)
 
 
 @app.route('/add_to_favorites', methods=['POST'])
